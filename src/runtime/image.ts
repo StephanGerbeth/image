@@ -192,7 +192,12 @@ export function createImage (context, { providers, defaultProvider, presets, int
       Object.assign(meta, await image.getMeta())
     } else {
       const internalUrl = context.ssrContext ? context.ssrContext.internalUrl : ''
-      const absoluteUrl = image.url[0] === '/' ? cleanDoubleSlashes(internalUrl + image.url) : image.url
+      let absoluteUrl
+      if (image.url[0] === '/') {
+        absoluteUrl = cleanDoubleSlashes(internalUrl + context.base + image.url)
+      } else {
+        absoluteUrl = image.url
+      }
       Object.assign(meta, await getMeta(absoluteUrl, getCache(context)))
     }
 

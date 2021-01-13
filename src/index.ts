@@ -137,7 +137,7 @@ function handleStaticGeneration (nuxt: any, options: ModuleOptions) {
     const downloads = Object.entries(staticImages)
       .map(([url, name]) => {
         if (!url.startsWith('http')) {
-          url = cleanDoubleSlashes(options.internalUrl + url)
+          url = cleanDoubleSlashes(options.internalUrl + nuxt.options.router.base + url)
         }
         return downloadImage({
           url,
