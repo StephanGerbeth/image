@@ -134,18 +134,27 @@ function handleStaticGeneration (nuxt: any, options: ModuleOptions) {
     const { dir: generateDir } = nuxt.options.generate
     try { await fs.mkdir(path.join(generateDir, '_image')) } catch {}
 
-    const downloads = Object.entries(staticImages)
-      .map(([url, name]) => {
-        if (!url.startsWith('http')) {
-          url = cleanDoubleSlashes(options.internalUrl + nuxt.options.router.base + url)
-        }
-        return downloadImage({
-          url,
-          name,
-          outDir: generateDir
-        })
+    // TODO: Need options for parallel downloads and timeout e.g. generate
+    return executeParallel(Object.entries(staticImages), ([url, name]) => {
+      if (!url.startsWith('http')) {
+        url = cleanDoubleSlashes(options.internalUrl + nuxt.options.router.base + url)
+      }
+      return downloadImage({
+        url,
+        name,
+        outDir: generateDir
       })
-    await Promise.all(downloads)
+    }, 10, 200)
+  })
+}
+
+function executeParallel (items, func, count, timeout) {
+  return Promise.all(items.splice(0, Math.min(10, items.length)).map(func)).then(() => {
+    if (items.length > 0) {
+      return new Promise((resolve) => {
+        global.setTimeout(resolve, timeout)
+      }).then(() => executeParallel(items, func, count, timeout))
+    }
   })
 }
 
